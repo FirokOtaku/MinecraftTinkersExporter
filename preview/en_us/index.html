@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Tinkers' Exporter</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="utf-8">
+
+    <script src="vue2_6_11.min.js"></script>
+    <script src="echarts4_1_0.min.js"></script>
+    <script src="vue-echarts4_0_2.min.js"></script>
+    <link href="bootstrap.min.css" rel="stylesheet">
+    <script src="jquery2_1_1.min.js"></script>
+    <script src="bootstrap3_3_7.min.js"></script>
+    <script src="data.js"></script>
+    <script src="lang.js"></script>
+    <style>
+        /*@font-face {*/
+        /*    font-family: "minecraft";*/
+        /*    src: url("minecraft.ttf");*/
+        /*}*/
+        .table_material tr td{
+            border: 1px solid gray;
+        }
+        body{
+            margin-top:35px;
+            overflow-y:scroll;
+            font-family: "Arial","Courier New","Microsoft YaHei","等线","黑体";
+        }
+        table{
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+<div id="app">
+<!--    <div style="position: fixed;top:0px;width:100%;height:35px;font-weight:bold;text-align:center;font-size: 13px;border:1px dimgray solid;">-->
+<!--        Tinkers' Exporter - Filter 0.1.0 by Firok-->
+<!--    </div>-->
+    <div class="container">
+        <div class="row clearfix">
+            <button v-bind:class="computePageButtonClass('search')" @click="currentPage='search'">{{lang.Search}}</button>
+            <button v-bind:class="computePageButtonClass('material')" @click="currentPage='material'">{{lang.Data}}</button>
+            <button v-bind:class="computePageButtonClass('compare')" @click="currentPage='compare'">{{lang.Compare}}</button>
+
+            <button v-bind:class="computePageButtonClass('all_materials')" v-if="enablePageAllMaterials" @click="currentPage='all_materials'">{{lang.AllMaterials}}</button>
+            <button v-bind:class="computePageButtonClass('all_traits')" v-if="enablePageAllTraits" @click="currentPage='all_traits'">{{lang.AllTraits}}</button>
+            <button v-bind:class="computePageButtonClass('about')" @click="currentPage='about'">{{lang.About}}</button>
+        </div>
+        <hr>
+    </div>
+
+    <div class="container" v-show="currentPage==='about'">
+        <div class="row clearfix">
+            <div class="jumbotron" style="width:100%">
+                <h1>Tinkers' Exporter</h1>
+                <p class="lead">by Firok</p>
+                <hr class="my-4">
+
+                <p>
+                    {{lang.Intro1}}
+                </p>
+                <p>
+                    {{lang.Intro2}}
+                </p>
+                <p>
+                    {{lang.Intro3}}
+                </p>
+                <p>
+                    {{lang.Intro4}}
+                </p>
+                <p>
+                    {{lang.Intro5}}
+                </p>
+
+                <hr>
+
+                <h2>{{lang.ExperimentalFeatures}}</h2>
+                <p class="text-warning">{{lang.ExperimentalFeaturesWarning}}</p>
+                <br>
+
+                <h3>{{lang.Enable+lang.AllMaterials}}</h3>
+                <div class="custom-control custom-switch" style="margin-top:10px">
+                    <input type="checkbox" class="custom-control-input" id="customSwitchEnablePageAllMaterials" checked="" v-model="enablePageAllMaterials">
+                    <label class="custom-control-label" for="customSwitchEnablePageAllMaterials">{{lang.EnableThen}}<em>{{lang.AllMaterials}}</em></label>
+                </div>
+                <br>
+
+                <h3>{{lang.Enable+lang.AllTraits}}</h3>
+                <div class="custom-control custom-switch" style="margin-top:10px">
+                    <input type="checkbox" class="custom-control-input" id="customSwitchEnablePageAllTraits" checked="" v-model="enablePageAllTraits">
+                    <label class="custom-control-label" for="customSwitchEnablePageAllTraits">{{lang.EnableThen}}<em>{{lang.AllTraits}}</em></label>
+                </div>
+                <br>
+
+                <br><br><br>
+
+                <h2>{{lang.DataSourceInformation}}</h2>
+                <hr>
+
+                <h3>{{lang.DataSource}}</h3>
+                <p>{{lang.Local}}</p>
+                <br>
+
+                <h3>{{lang.DataSourceEnvironment}}</h3>
+
+                <table class="table table-hover">
+                    <thead>
+                    <tr>
+                        <th scope="col">NAME</th>
+                        <th scope="col">ID</th>
+                        <th scope="col">VERSION</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr v-for="mod_info in dataTic.infos.mod_list">
+                        <th scope="row">{{mod_info.name}}</th>
+                        <td>{{mod_info.id}}</td>
+                        <td>{{mod_info.version}}</td>
+                    </tr>
+                    </tbody>
+                </table>
+
+                <br>
+
+                <h3>{{lang.DataSourceCreateTime}}</h3>
+                <p>{{ new Date(dataTic.infos.create_time) }}</p>
+
+                <br><br><br>
+
+                <h2>Contact</h2>
+                <hr>
+                <h3>QQ</h3>
+                <p><a href="http://wpa.qq.com/msgrd?v=3&uin=351768593&site=qq&menu=yes">351768593</a></p>
+
+                <h3>E-Mail</h3>
+                <p><a href="mailto:firok@qq.com">firok@qq.com</a></p>
+
+                <h3>GitHub</h3>
+                <p><a href="https://github.com/351768593">Firok</a></p>
+                <p><a href="https://github.com/351768593/MinecraftTinkersExporter">Tinkers' Exporter</a></p>
+
+            </div>
+        </div>
+    </div>
+
+    <div class="container" v-show="currentPage==='material'">
+
+        <div class="row clearfix" v-show="!currentMaterials.length">
+            <div class="btn btn-default btn-block">{{lang.NothingToDisplay}}</div>
+        </div>
+
+        <div class="row clearfix" v-show="currentMaterials.length">
+
+            <div class="col-sm-12">
+                <button v-for="(currentMaterial,index) in currentMaterials"
+                        class="btn btn-default">
+                    <a v-bind:href="'#mat_'+currentMaterial.id">{{currentMaterial.name}}</a>
+
+                    &nbsp;&nbsp;&nbsp;
+
+                    <span class="close" @click="closeMaterial(index)" aria-hidden="true">&times;</span>
+                </button>
+
+                <button class="btn btn-info" @click="closeAllMaterials">{{lang.CloseAll}}</button>
+            </div>
+
+            <hr class="col-sm-12">
+
+            <div v-for="(currentMaterial,index) in currentMaterials"
+                 class="card border-info mb-3 col-lg-4 col-md-6 col-sm-12"
+                 v-bind:id="'mat_'+currentMaterial.id"
+            >
+
+                <div class="card-header">
+                    <span style="font-weight:bold">{{currentMaterial.name}}</span> <span>{{currentMaterial.id}}</span>
+                    <button type="button" class="close" @click="closeMaterial(index)">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                    <span class="close">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+                    <a href="#app" class="close">&and;</a>
+
+                </div>
+
+                <div class="card-body">
+
+                    <table v-if="currentMaterial" class="table_material" style="width:100%">
+                        <tr v-if="currentMaterial.head">
+                            <td rowspan="4">{{lang.Head}}</td>
+                            <td>{{lang.Durability}}</td>
+                            <td>{{ currentMaterial.head.durability }}</td>
+                            <td rowspan="4">
+                                <traits v-bind:traits="currentMaterial.head.traits" v-on:trait-click="traitClick"></traits>
+                            </td>
+                        </tr>
+                        <tr v-if="currentMaterial.head">
+                            <td>{{lang.Attack}}</td>
+                            <td>{{ currentMaterial.head.attack }}</td>
+                        </tr>
+                        <tr v-if="currentMaterial.head">
+                            <td>{{lang.MiningSpeed}}</td>
+                            <td>{{ currentMaterial.head.speed }}</td>
+                        </tr>
+                        <tr v-if="currentMaterial.head">
+                            <td>{{lang.MiningLevel}}</td>
+                            <td>{{ currentMaterial.head.level }}</td>
+                        </tr>
+
+                        <tr v-if="currentMaterial.handle">
+                            <td rowspan="2">{{lang.Handle}}</td>
+                            <td>{{lang.Durability}}</td>
+                            <td>{{ currentMaterial.handle.durability }}</td>
+                            <td rowspan="2">
+                                <traits v-bind:traits="currentMaterial.handle.traits"></traits>
+                            </td>
+                        </tr>
+                        <tr v-if="currentMaterial.handle">
+                            <td>{{lang.Modifier}}</td>
+                            <td>{{ currentMaterial.handle.modifier }}</td>
+                        </tr>
+
+                        <tr v-if="currentMaterial.extra">
+                            <td>{{lang.Extra}}</td>
+                            <td>{{lang.Durability}}</td>
+                            <td>{{ currentMaterial.extra.durability }}</td>
+                            <td>
+                                <traits v-bind:traits="currentMaterial.extra.traits"></traits>
+                            </td>
+                        </tr>
+
+                        <tr v-if="currentMaterial.bow">
+                            <td rowspan="3">{{lang.Bow}}</td>
+                            <td>{{lang.Attack}}</td>
+                            <td>{{ currentMaterial.bow.damage }}</td>
+                            <td rowspan="3">
+                                <traits v-bind:traits="currentMaterial.bow.traits"></traits>
+                            </td>
+                        </tr>
+                        <tr v-if="currentMaterial.bow">
+                            <td>{{lang.Speed}}</td>
+                            <td>{{ currentMaterial.bow.speed }}</td>
+                        </tr>
+                        <tr v-if="currentMaterial.bow">
+                            <td>{{lang.Range}}</td>
+                            <td>{{ currentMaterial.bow.range }}</td>
+                        </tr>
+
+                        <tr v-if="currentMaterial.string">
+                            <td>{{lang.String}}</td>
+                            <td>{{lang.Modifier}}</td>
+                            <td>{{ currentMaterial.string.modifier }}</td>
+                            <td>
+                                <traits v-bind:traits="currentMaterial.string.traits"></traits>
+                            </td>
+                        </tr>
+
+                        <tr v-if="currentMaterial.fletching">
+                            <td rowspan="2">{{lang.Fletching}}</td>
+                            <td>{{lang.Accuracy}}</td>
+                            <td>{{ currentMaterial.fletching.accuracy }}</td>
+                            <td rowspan="2">
+                                <traits v-bind:traits="currentMaterial.fletching.traits"></traits>
+                            </td>
+                        </tr>
+                        <tr v-if="currentMaterial.fletching">
+                            <td>{{lang.Modifier}}</td>
+                            <td>{{ currentMaterial.fletching.modifier }}</td>
+                        </tr>
+
+                        <tr v-if="currentMaterial.shaft">
+                            <td rowspan="2">{{lang.Shaft}}</td>
+                            <td>{{lang.Modifier}}</td>
+                            <td>{{ currentMaterial.shaft.modifier }}</td>
+                            <td rowspan="2">
+                                <traits v-bind:traits="currentMaterial.shaft.traits"></traits>
+                            </td>
+                        </tr>
+                        <tr v-if="currentMaterial.shaft">
+                            <td>{{lang.Ammo}}</td>
+                            <td>{{ currentMaterial.shaft.ammo }}</td>
+                        </tr>
+
+                        <tr v-if="currentMaterial.core">
+                            <td rowspan="2">{{lang.Core}}</td>
+                            <td>{{lang.Defense}}</td>
+                            <td>{{ currentMaterial.core.defense }}</td>
+                            <td rowspan="2">
+                                <traits v-bind:traits="currentMaterial.core.traits"></traits>
+                            </td>
+                        </tr>
+                        <tr v-if="currentMaterial.core">
+                            <td>{{lang.Durability}}</td>
+                            <td>{{ currentMaterial.core.durability }}</td>
+                        </tr>
+
+                        <tr v-if="currentMaterial.plate">
+                            <td rowspan="3">{{lang.Plate}}</td>
+                            <td>{{lang.Durability}}</td>
+                            <td>{{ currentMaterial.plate.durability}}</td>
+                            <td rowspan="3">
+                                <traits v-bind:traits="currentMaterial.plate.traits"></traits>
+                            </td>
+                        </tr>
+                        <tr v-if="currentMaterial.plate">
+                            <td>{{lang.Toughness}}</td>
+                            <td>{{ currentMaterial.plate.toughness }}</td>
+                        </tr>
+                        <tr v-if="currentMaterial.plate">
+                            <td>{{lang.Modifier}}</td>
+                            <td>{{ currentMaterial.plate.modifier }}</td>
+                        </tr>
+
+                        <tr v-if="currentMaterial.trim">
+                            <td>{{lang.Trim}}</td>
+                            <td>{{lang.Durability}}</td>
+                            <td>{{ currentMaterial.trim.durability }}</td>
+                            <td>
+                                <traits v-bind:traits="currentMaterial.trim.traits"></traits>
+                            </td>
+                        </tr>
+                    </table>
+                    <hr>
+                    <div v-for="trait in computeTraits(currentMaterial)" style="width:100%">
+                        <trait v-bind:trait="trait"></trait>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="container" v-show="currentPage==='search'">
+        <div class="row clearfix">
+            <div class="col-sm-12 col-md-8 col-lg-5">
+                <div style="width: 100%">
+                    <select v-model="inFilterType" style="width: 60%">
+                        <option v-for="attr_type in AttrType.listTypes" v-bind:value="attr_type.id">{{attr_type.name}}</option>
+                    </select>
+                </div>
+
+                <div v-if="inFilterIsNumber" style="display:inline">
+                    <select v-model="inFilterTypeNumber" style="width:50px;display: inline">
+                        <option value="greater_equal"> ≥ </option>
+                        <option value="greater"> ＞ </option>
+                        <option value="equal"> ＝ </option>
+                        <option value="lesser"> ＜ </option>
+                        <option value="lesser_equal"> ≤ </option>
+                        <!--                <option value="approach"> ≈ </option>-->
+                    </select>
+
+                    <input type="number" v-model="inFilterValueNumber" style="width:300px;display:inline;background-color: lightgray" class="form-control">
+
+                    <!--            (±<input type="number">)-->
+                </div>
+
+                <div v-if="inFilterIsTrait" style="display:inline;width:200px">
+                    <select v-model="inFilterTypeTrait" style="width:100px">
+                        <option value="include">{{lang.Include}}</option>
+                        <option value="exclude">{{lang.Exclude}}</option>
+                    </select>
+                    <input type="text" v-model="inFilterValueTrait" style="width:200px">
+                </div>
+
+                <div v-if="inFilterIsString" style="display:inline">
+                    <select v-model="inFilterTypeString">
+                        <option value="include">{{lang.Include}}</option>
+                        <option value="exclude">{{lang.Exclude}}</option>
+                        <option value="full_equal">{{lang.FullEqual}}</option>
+                        <option value="non_equal">{{lang.NonEqual}}</option>
+                    </select>
+                    <input type="text" v-model="inFilterValueString">
+                </div>
+
+                <br>
+
+                <button class="btn btn-info" @click="addFilter">{{lang.AddFilter}}</button>
+                <button class="btn btn-warning" @click="removeFilters">{{lang.RemoveFilters}}</button>
+                <button class="btn btn-success" @click="filt">{{lang.Filt}}</button>
+            </div>
+            <div class="col-sm-12 col-md-4 col-lg-7">
+                <br>
+                <div v-for="(filter,index) in filters" class="btn btn-default" style="width:100%">
+                    {{filter.info()}}
+                    <button type="button" class="close" @click="removeFilter(index)">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+
+                <div v-if="!filters.length" class="btn btn-default btn-block">{{lang.NoFilters}}</div>
+                <br>
+            </div>
+            <div class="col-sm-12">
+                <br>
+                <div class="custom-control custom-switch" style="margin-top:10px">
+                    <input type="checkbox" class="custom-control-input" id="customSwitchQuickSwitchPage" checked="" v-model="quickSwitchPage">
+                    <label class="custom-control-label" for="customSwitchQuickSwitchPage">{{lang.QuickSwitch}}</label>
+                </div>
+
+            </div>
+        </div>
+
+        <hr>
+
+        <div class="row clearfix" >
+            <div class="col-md-12 column">
+                <button
+                        v-if="results && results.length"
+                        v-for="result in results"
+                        @click="openMaterial(result)"
+                        type="button"
+                        class="btn btn-primary btn-lg">
+                    {{ result.name }}
+
+                    <span v-if="computeMaterialButtonCount(result)">&nbsp;+&nbsp;</span>
+                </button>
+
+                <button class="btn btn-info" v-if="results.length>=2" @click="openAllResultMaterials">{{lang.OpenAll}}</button>
+                <button class="btn btn-info" v-if="results.length" href="#app">{{lang.BackToTop}}</button>
+
+            </div>
+        </div>
+    </div>
+
+    <div class="container" v-show="currentPage==='compare'">
+
+        <div class="row clearfix" v-show="!currentMaterials.length">
+            <div class="btn btn-default btn-block">{{lang.NothingToDisplay}}</div>
+        </div>
+
+        <div class="row clearfix" v-show="currentMaterials.length">
+            <div v-bind:class="computeTypeButtonClass('tool')" @click="currentType='tool'">⚒️</div>
+            <div v-bind:class="computeTypeButtonClass('bow')" @click="currentType='bow'">🏹</div>
+            <div v-bind:class="computeTypeButtonClass('armor')" @click="currentType='armor'">🛡</div>
+        </div>
+        <div class="row clearfix">
+            <hr>
+        </div>
+        <div class="row clearfix"  v-if="currentMaterials.length">
+            <div class="col-sm-12" style="overflow-x: scroll">
+
+                <table class="table-bordered" width="100%">
+                    <tr>
+                        <td v-for="type in currentTypes">
+                            {{ type.name }}
+                            <a href="#chart"
+                               class="btn btn-info btn-sm"
+                               @click="currentChartType= currentChartType===type? null : type"
+                               v-if="type.type==='number'">
+                                {{ currentChartType===type?'-':'+' }}
+                            </a>
+                        </td>
+                    </tr>
+                    <tr v-for="mat in currentMaterials">
+                        <td v-for="type in currentTypes">
+                            <span v-if="type.type==='number' || type.type==='string'"> {{ type.getter(mat) }} </span>
+                            <span v-if="type.type==='trait'"> <traits v-bind:traits="type.getter(mat)"></traits> </span>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        <div class="row clearfix" v-if="currentMaterials.length">
+            <div class="col-sm-12" v-if="currentChartType!=null && currentChartType.type==='number'">
+                <br><br>
+                <h3 style="width:100%;text-align: center">{{currentChartType.name}}</h3>
+                <div>
+                    <v-chart id="chart" v-bind:options="computeMaterialChartOptions(currentChartType)" style="width: 100%;height:300px;margin-top:30px"></v-chart>
+                </div>
+            </div>
+        </div>
+<!--        <div class="row clearfix" v-if="currentMaterials.length">-->
+<!--            <v-chart id="radar" v-bind:options="radarDatas" style="width: 100%;height:600px;margin-top:50px"></v-chart>-->
+<!--        </div>-->
+
+
+    </div>
+
+    <div class="container" v-show="currentPage==='all_materials'">
+        <div class="row clearfix">
+            <table class="table-bordered" width="200%">
+                <tr>
+                    <td v-for="type in AttrType.listTypes">
+                        {{ type.name }}
+                    </td>
+                </tr>
+                <tr v-for="mat in dataTic.materials">
+                    <td v-for="type in AttrType.listTypes">
+                        <span v-if="type.type==='number' || type.type==='string'"> {{ type.getter(mat) }} </span>
+                        <span v-if="type.type==='trait'"> <traits v-bind:traits="type.getter(mat)"></traits> </span>
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+    <div class="container" v-show="currentPage==='all_traits'">
+        <div class="row clearfix">
+            <div style="width:100%;margin-bottom:5px" v-for="t in dataTic.traits">
+                <trait v-bind:trait="t"></trait>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="row clearfix">
+            <div class="col-sm-12">
+                <hr>
+                <br><br>
+                <br>
+            </div>
+        </div>
+    </div>
+</div>
+
+</body>
+
+<script src="index.js"></script>
+
+</html>

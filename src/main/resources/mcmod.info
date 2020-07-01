@@ -1,0 +1,18 @@
+[
+  {
+    "modid": "tic_exporter",
+    "name": "Tinkers' Exporter",
+    "description": "A mod used to export all information of TiC materials and traits",
+    "version": "1.12.2-0.1.0",
+    "mcversion": "${mcversion}",
+    "url": "https://github.com/351768593/MinecraftTinkersExporter",
+    "updateUrl": "",
+    "authorList": [
+      "Firok"
+    ],
+    "credits": "Forge guys, MCP guys, TiC guys, Harbinger guys",
+    "logoFile": "tic_exporter_logo.png",
+    "screenshots": [],
+    "dependencies": []
+  }
+]
