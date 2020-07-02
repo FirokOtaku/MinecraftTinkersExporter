@@ -1,4 +1,4 @@
-package firok.tiths;
+package firok.tice;
 
 import c4.conarm.lib.materials.CoreMaterialStats;
 import c4.conarm.lib.materials.PlatesMaterialStats;
